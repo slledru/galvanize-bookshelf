@@ -3,6 +3,7 @@
 const express = require('express')
 const knex = require('../knex')
 const humps = require('humps')
+const boom = require('boom')
 const bookTable = 'books'
 
 // eslint-disable-next-line new-cap
@@ -29,7 +30,7 @@ router.get('/:id', (req, res, next) => {
           res.sendStatus(404)
         }
       })
-      .catch((err) => console.log(err))
+      .catch((err) => res.sendStatus(404))
   }
   else {
     res.sendStatus(404)
@@ -38,7 +39,22 @@ router.get('/:id', (req, res, next) => {
 
 router.post('/', (req, res, next) => {
   const { title, author, genre, description, coverUrl } = req.body
-  if (title && author && genre && description && coverUrl) {
+  if (!title) {
+    next(boom.badRequest('Title must not be blank'))
+  }
+  else if (!author) {
+    next(boom.badRequest('Author must not be blank'))
+  }
+  else if (!genre) {
+    next(boom.badRequest('Genre must not be blank'))
+  }
+  else if (!description) {
+    next(boom.badRequest('Description must not be blank'))
+  }
+  else if (!coverUrl) {
+    next(boom.badRequest('Cover URL must not be blank'))
+  }
+  else {
     const cover_url = humps.decamelizeKeys(coverUrl)
     knex(bookTable)
       .insert({
@@ -53,10 +69,7 @@ router.post('/', (req, res, next) => {
           res.sendStatus(404)
         }
       })
-      .catch((err) => console.log(err))
-  }
-  else {
-    res.sendStatus(400)
+      .catch((err) => res.sendStatus(404))
   }
 })
 
@@ -95,7 +108,7 @@ router.patch('/:id', (req, res, next) => {
           res.sendStatus(404)
         }
       })
-      .catch((err) => console.log(err))
+      .catch((err) => res.sendStatus(404))
   }
 })
 
@@ -117,7 +130,7 @@ router.delete('/:id', (req, res, next) => {
           res.sendStatus(404)
         }
       })
-      .catch((err) => console.log(err))
+      .catch((err) => res.sendStatus(404))
   }
 })
 
