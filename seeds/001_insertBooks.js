@@ -72,12 +72,15 @@ exports.seed = (knex, Promise) => {
             title: 'Web Development with Node and Express',
             author: 'Ethan Brown',
             genre: 'Node',
-            description: "Learn how to build dynamic web applications with Express, a key component of the Node/JavaScript development stack. In this hands-on guide, author Ethan Brown teaches you the fundamentals through the development of a fictional application that exposes a public website and a RESTful API. You'll also learn web architecture best practices to help you build single-page, multi-page, and hybrid web apps with Express.",
+            description: 'Learn how to build dynamic web applications with Express, a key component of the Node/JavaScript development stack. In this hands-on guide, author Ethan Brown teaches you the fundamentals through the development of a fictional application that exposes a public website and a RESTful API. You\'ll also learn web architecture best practices to help you build single-page, multi-page, and hybrid web apps with Express.',
             cover_url: 'http://akamaicovers.oreilly.com/images/0636920032977/lrg.jpg',
             created_at: new Date('2016-06-26 14:26:16 UTC'),
             updated_at: new Date('2016-06-26 14:26:16 UTC')
           }
         ])
+          .then(() => {
+            return knex.raw(`SELECT setval('books_id_seq', (SELECT MAX(id) FROM books));`)
+          })
       ])
     })
 }
