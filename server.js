@@ -13,6 +13,7 @@ const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
 const morgan = require('morgan')
 
+/* eslint-disable */
 switch (app.get('env')) {
   case 'development':
     app.use(morgan('dev'))
@@ -24,6 +25,7 @@ switch (app.get('env')) {
 
   default:
 }
+/* eslint-enable */
 
 app.use(bodyParser.json())
 app.use(cookieParser())
@@ -48,7 +50,7 @@ const users = require('./routes/users')
 
 app.use('/books', books)
 app.use(favorites)
-app.use(token)
+app.use('/token', token)
 app.use('/users', users)
 
 app.use((_req, res) => {
