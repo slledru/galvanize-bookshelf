@@ -2,7 +2,7 @@
 
 const express = require('express')
 const knex = require('../knex')
-const convertKeys = require('./utils')
+const humps = require('humps')
 const bookTable = 'books'
 
 // eslint-disable-next-line new-cap
@@ -13,7 +13,7 @@ router.get('/', (req, res, next) => {
     .then((rows) => {
       const sorted = rows
         .sort((a, b) => a.title.toUpperCase() > b.title.toUpperCase())
-        .map((record) => convertKeys(record))
+        .map((record) => humps.camelizeKeys(record))
       res.type('json')
       res.json(sorted)
     })
@@ -27,7 +27,7 @@ router.get('/:id', (req, res, next) => {
     .where('id', id)
     .then((rows) => {
       res.type('json')
-      res.json(convertKeys(rows[0]))
+      res.json(humps.camelizeKeys(rows[0]))
     })
     .catch((err) => console.log(err))
 })
