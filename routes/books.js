@@ -101,16 +101,24 @@ router.patch('/:id', (req, res, next) => {
 
 router.delete('/:id', (req, res, next) => {
   const { id } = req.params
-
-  knex(bookTable)
-    .del()
-    .where('id', id)
-    .returning('*')
-    .then((rows) => {
-      res.type('json')
-      res.json(humps.camelizeKeys(rows[0]))
-    })
-    .catch((err) => console.log(err))
+  if (!id) {
+    next({ status: 404, message: 'Id must not be blank' })
+  }
+  else {
+    knex(bookTable)
+      .del()
+      .where('id', id)
+      .returning(['author', 'title', 'description', 'cover_url', 'genre'])
+      .then((rows) => {
+        if (rows.length > 0) {
+          res.json(humps.camelizeKeys(rows[0]))
+        }
+        else {
+          res.sendStatus(404)
+        }
+      })
+      .catch((err) => console.log(err))
+  }
 })
 
 module.exports = router
