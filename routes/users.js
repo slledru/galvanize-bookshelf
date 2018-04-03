@@ -48,12 +48,14 @@ router.post('/', (req, res, next) => {
             }
           })
           .catch((ex) => {
+            /* eslint-disable */
             if (ex.code == 23505) {
               next(boom.badRequest('Email already exists'))
             }
             else {
               next(boom.badImplementation())
             }
+            /* eslint-enable */
           })
       }
     })
