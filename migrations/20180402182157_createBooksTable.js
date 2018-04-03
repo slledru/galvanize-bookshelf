@@ -6,7 +6,8 @@ exports.up = (knex, Promise) => {
     table.varchar('genre', 255).notNullable().defaultTo('')
     table.text('description').notNullable().defaultTo('')
     table.text('cover_url').notNullable().defaultTo('')
-    table.timestamps(true, true)
+    table.dateTime('created_at').notNullable().defaultTo(knex.raw('now()'))
+    table.dateTime('updated_at').notNullable().defaultTo(knex.raw('now()'))
   })
 }
 
