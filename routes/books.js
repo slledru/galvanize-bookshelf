@@ -10,7 +10,7 @@ const bookTable = 'books'
 const router = express.Router()
 
 router.get('/', (req, res, next) => {
-  knex('books')
+  knex(bookTable)
     .then((rows) => rows.sort((a, b) => a.title.toUpperCase() > b.title.toUpperCase()))
     .then((rows) => rows.map((record) => humps.camelizeKeys(record)))
     .then((rows) => res.json(rows))
@@ -19,22 +19,17 @@ router.get('/', (req, res, next) => {
 
 router.get('/:id', (req, res, next) => {
   const { id } = req.params
-  if (id) {
-    knex(bookTable)
-      .where('id', id)
-      .then((rows) => {
-        if (rows.length > 0) {
-          res.json(humps.camelizeKeys(rows[0]))
-        }
-        else {
-          res.sendStatus(404)
-        }
-      })
-      .catch((err) => res.sendStatus(404))
-  }
-  else {
-    res.sendStatus(404)
-  }
+  knex(bookTable)
+    .where('id', id)
+    .then((rows) => {
+      if (rows.length > 0) {
+        res.json(humps.camelizeKeys(rows[0]))
+      }
+      else {
+        res.sendStatus(404)
+      }
+    })
+    .catch((err) => res.sendStatus(404))
 })
 
 router.post('/', (req, res, next) => {
