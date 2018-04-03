@@ -71,47 +71,37 @@ router.post('/', (req, res, next) => {
 router.patch('/:id', (req, res, next) => {
   const { id } = req.params
   const { title, author, genre, description, coverUrl } = req.body
-  if (!id) {
-    next(boom.notFound())
-  }
-  else {
-    const cover_url = humps.decamelizeKeys(coverUrl)
-    knex(bookTable)
-      .update({ title, author, genre, description, cover_url })
-      .where('id', id)
-      .returning('*')
-      .then((rows) => {
-        if (rows.length > 0) {
-          res.json(humps.camelizeKeys(rows[0]))
-        }
-        else {
-          next(boom.notFound())
-        }
-      })
-      .catch((err) => next(boom.notFound()))
-  }
+  const cover_url = humps.decamelizeKeys(coverUrl)
+  knex(bookTable)
+    .update({ title, author, genre, description, cover_url })
+    .where('id', id)
+    .returning('*')
+    .then((rows) => {
+      if (rows.length > 0) {
+        res.json(humps.camelizeKeys(rows[0]))
+      }
+      else {
+        next(boom.notFound())
+      }
+    })
+    .catch((err) => next(boom.notFound()))
 })
 
 router.delete('/:id', (req, res, next) => {
   const { id } = req.params
-  if (!id) {
-    next({ status: 404, message: 'Id must not be blank' })
-  }
-  else {
-    knex(bookTable)
-      .del()
-      .where('id', id)
-      .returning(['author', 'title', 'description', 'cover_url', 'genre'])
-      .then((rows) => {
-        if (rows.length > 0) {
-          res.json(humps.camelizeKeys(rows[0]))
-        }
-        else {
-          res.sendStatus(404)
-        }
-      })
-      .catch((err) => res.sendStatus(404))
-  }
+  knex(bookTable)
+    .del()
+    .where('id', id)
+    .returning(['author', 'title', 'description', 'cover_url', 'genre'])
+    .then((rows) => {
+      if (rows.length > 0) {
+        res.json(humps.camelizeKeys(rows[0]))
+      }
+      else {
+        res.sendStatus(404)
+      }
+    })
+    .catch((err) => res.sendStatus(404))
 })
 
 module.exports = router
