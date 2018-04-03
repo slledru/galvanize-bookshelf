@@ -19,8 +19,11 @@ router.post('/', (req, res, next) => {
   else if (!lastName) {
     next(boom.badRequest('Last name must not be blank'))
   }
-  else if (!password) {
-    next(boom.badRequest('Password must not be blank'))
+  else if (!password || password.length < 8) {
+    next(boom.badRequest('Password must be at least 8 characters long'))
+  }
+  else if (!email) {
+    next(boom.badRequest('Email must not be blank'))
   }
   else {
     bcrypt.hash(password, saltRounds, (err, hash) => {
@@ -44,7 +47,14 @@ router.post('/', (req, res, next) => {
               next(boom.notFound())
             }
           })
-          .catch((ex) => next(boom.badImplementation()))
+          .catch((ex) => {
+            if (ex.code == 23505) {
+              next(boom.badRequest('Email already exists'))
+            }
+            else {
+              next(boom.badImplementation())
+            }
+          })
       }
     })
   }
