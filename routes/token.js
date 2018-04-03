@@ -23,6 +23,8 @@ router.get('/', (req, res, next) => {
 })
 
 router.post('/', (req, res, next) => {
+  console.log('cookies', req.cookies)
+  console.log('post body', req.body)
   const { email, password } = req.body
   if (!password || password.length < 8) {
     next(boom.badRequest('Password must be at least 8 characters long'))
@@ -34,17 +36,20 @@ router.post('/', (req, res, next) => {
     console.log('post', req.body)
     const token = jwt.sign(email, password)
     res.cookie(email, token)
-    //console.log(res);
+    console.log(res.cookies)
     res.sendStatus(200)
   }
 })
 
 router.delete('/', (req, res, next) => {
+  console.log('cookies', req.cookies)
+  console.log('delete body', req.body)
   const { email, password } = req.body
   if (!email) {
     next(boom.badRequest('Email must not be blank'))
   }
   else {
+    console.log('cookies', req.cookies)
     console.log('delete', req.body)
   }
 })
