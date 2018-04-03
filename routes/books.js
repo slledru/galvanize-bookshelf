@@ -76,23 +76,8 @@ router.post('/', (req, res, next) => {
 router.patch('/:id', (req, res, next) => {
   const { id } = req.params
   const { title, author, genre, description, coverUrl } = req.body
-  if (!title) {
-    next({ status: 400, message: 'Title must not be blank' })
-  }
-  else if (!author) {
-    next({ status: 400, message: 'Author must not be blank' })
-  }
-  else if (!genre) {
-    next({ status: 400, message: 'Genre must not be blank' })
-  }
-  else if (!description) {
-    next({ status: 400, message: 'Description must not be blank' })
-  }
-  else if (!coverUrl) {
-    next({ status: 400, message: 'Cover URL must not be blank' })
-  }
-  else if (!id) {
-    next({ status: 404, message: 'Id must not be blank' })
+  if (!id) {
+    next(boom.notFound())
   }
   else {
     const cover_url = humps.decamelizeKeys(coverUrl)
@@ -105,10 +90,10 @@ router.patch('/:id', (req, res, next) => {
           res.json(humps.camelizeKeys(rows[0]))
         }
         else {
-          res.sendStatus(404)
+          next(boom.notFound())
         }
       })
-      .catch((err) => res.sendStatus(404))
+      .catch((err) => next(boom.notFound()))
   }
 })
 
