@@ -62,7 +62,7 @@ router.post('/', (req, res, next) => {
           return rows[0]
         }
         else {
-          next(boom.badRequest('Email must be unique'))
+          next(boom.badRequest('Bad email or password'))
         }
       })
       .then((record) => {
