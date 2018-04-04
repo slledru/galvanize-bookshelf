@@ -5,6 +5,7 @@ const knex = require('../knex')
 const humps = require('humps')
 const boom = require('boom')
 const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 const saltRounds = 10
 const userTable = 'users'
 
@@ -41,11 +42,16 @@ router.post('/', (req, res, next) => {
           .returning(['first_name', 'last_name', 'email', 'id'])
           .then((rows) => {
             if (rows.length > 0) {
-              res.json(humps.camelizeKeys(rows[0]))
+              return rows[0]
             }
             else {
               next(boom.notFound())
             }
+          })
+          .then((row) => {
+            const token = jwt.sign({ data: email }, password)
+            res.setHeader('Set-Cookie', `token=${token}; Path=\/; HttpOnly`)
+            res.json(humps.camelizeKeys(row))
           })
           .catch((ex) => {
             /* eslint-disable */
