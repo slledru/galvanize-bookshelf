@@ -11,7 +11,7 @@ const router = express.Router()
 
 router.get('/', (req, res, next) => {
   knex(bookTable)
-    .then((rows) => rows.sort((a, b) => a.title.toUpperCase() > b.title.toUpperCase()))
+    .orderBy('title', 'asc')
     .then((rows) => rows.map((record) => humps.camelizeKeys(record)))
     .then((rows) => res.json(rows))
     .catch((err) => console.log(err))
