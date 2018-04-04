@@ -47,7 +47,10 @@ router.get('/', (req, res, next) => {
 
 router.post('/', (req, res, next) => {
   const { email, password } = req.body
-  if (!password || password.length < 8) {
+  if (!password) {
+    next(boom.badRequest('Password must not be blank'))
+  }
+  else if (password.length < 8) {
     next(boom.badRequest('Password must be at least 8 characters long'))
   }
   else if (!email) {
@@ -66,7 +69,9 @@ router.post('/', (req, res, next) => {
         }
       })
       .then((record) => {
+        console.log(req.body, req.cookies)
         const token = jwt.sign({ data: email }, password)
+        console.log(req.cookies, email, password, token)
         res.setHeader('Set-Cookie', `token=${token}; Path=\/; HttpOnly`)
         res.status(200).json(humps.camelizeKeys(record))
       })
