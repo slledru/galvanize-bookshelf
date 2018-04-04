@@ -30,7 +30,18 @@ router.get('/', (req, res, next) => {
 })
 
 router.get('/check', (req, res, next) => {
-
+  const { bookId } = req.query
+  knex(favoriteTable)
+    .where('book_id', bookId)
+    .then((rows) => {
+      if (rows.length > 0) {
+        res.json(true)
+      }
+      else {
+        res.json(false)
+      }
+    })
+    .catch((err) => res.json(false))
 })
 
 router.post('/', (req, res, next) => {
