@@ -23,8 +23,6 @@ router.get('/', (req, res, next) => {
 })
 
 router.post('/', (req, res, next) => {
-  console.log('cookies', req.cookies)
-  console.log('post body', req.body)
   const { email, password } = req.body
   if (!password || password.length < 8) {
     next(boom.badRequest('Password must be at least 8 characters long'))
@@ -33,11 +31,22 @@ router.post('/', (req, res, next) => {
     next(boom.badRequest('Email must not be blank'))
   }
   else {
-    console.log('post', req.body)
-    const token = jwt.sign(email, password)
-    res.cookie(email, token)
-    console.log(res.cookies)
-    res.sendStatus(200)
+    knex(userTable)
+      .select(['email', 'first_name', 'id', 'last_name'])
+      .where('email', email)
+      .then((rows) => {
+        if (rows.length === 1) {
+          return rows[0]
+        }
+        else {
+          next(boom.badRequest('Email must be unique'))
+        }
+      })
+      .then((record) => {
+        const token = jwt.sign({ data: email }, password)
+        res.setHeader('Set-Cookie', `token=${token}; Path=\/; HttpOnly`)
+        res.status(200).json(humps.camelizeKeys(record))
+      })
   }
 })
 
