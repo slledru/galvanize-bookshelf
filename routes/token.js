@@ -70,23 +70,13 @@ router.post('/', (req, res, next) => {
         res.setHeader('Set-Cookie', `token=${token}; Path=\/; HttpOnly`)
         res.status(200).json(humps.camelizeKeys(record))
       })
-      .catch((err) => {
-        console.log(err)
-      })
+      .catch((err) => next(err))
   }
 })
 
 router.delete('/', (req, res, next) => {
-  console.log('cookies', req.cookies)
-  console.log('delete body', req.body)
-  const { email, password } = req.body
-  if (!email) {
-    next(boom.badRequest('Email must not be blank'))
-  }
-  else {
-    console.log('cookies', req.cookies)
-    console.log('delete', req.body)
-  }
+  res.setHeader('Set-Cookie', `token=; Path=\/; HttpOnly`)
+  res.sendStatus(200)
 })
 
 module.exports = router
