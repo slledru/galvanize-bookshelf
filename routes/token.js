@@ -5,6 +5,7 @@ const knex = require('../knex')
 const humps = require('humps')
 const boom = require('boom')
 const jwt = require('jsonwebtoken')
+const bcrypt = require('bcrypt')
 const userTable = 'users'
 
 // eslint-disable-next-line new-cap
@@ -58,7 +59,7 @@ router.post('/', (req, res, next) => {
   }
   else {
     knex(userTable)
-      .select(['email', 'first_name', 'id', 'last_name'])
+      .select('*')
       .where('email', email)
       .then((rows) => {
         if (rows.length === 1) {
@@ -69,11 +70,31 @@ router.post('/', (req, res, next) => {
         }
       })
       .then((record) => {
-        console.log(req.body, req.cookies)
-        const token = jwt.sign({ data: email }, password)
-        console.log(req.cookies, email, password, token)
-        res.setHeader('Set-Cookie', `token=${token}; Path=\/; HttpOnly`)
-        res.status(200).json(humps.camelizeKeys(record))
+        if (record) {
+          bcrypt.compare(password, record.hashed_password, (err, result) => {
+            if (err) {
+              next(boom.badImplementation())
+            }
+            else {
+              if (result) {
+                const token = jwt.sign({ data: email }, password)
+                const toSend = { email: record.email,
+                  first_name: record.first_name,
+                  last_name: record.last_name,
+                  id: record.id
+                }
+                res.setHeader('Set-Cookie', `token=${token}; Path=\/; HttpOnly`)
+                res.status(200).json(humps.camelizeKeys(toSend))
+              }
+              else {
+                next(boom.badRequest('Bad email or password'))
+              }
+            }
+          })
+        }
+        else {
+          next(boom.badRequest('Bad email or password'))
+        }
       })
       .catch((err) => next(err))
   }
