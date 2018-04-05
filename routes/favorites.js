@@ -70,7 +70,27 @@ router.post('/', (req, res, next) => {
 })
 
 router.delete('/', (req, res, next) => {
-
+  const { bookId } = req.body
+  if (bookId) {
+    knex(favoriteTable)
+      .del()
+      .where('book_id', bookId)
+      .returning(['book_id', 'user_id'])
+      .then((rows) => {
+        if (rows.length === 1) {
+          return rows[0]
+        }
+        else {
+          next(boom.badImplementation())
+        }
+      })
+      .then((row) => humps.camelizeKeys(row))
+      .then((camel) => res.json(camel))
+      .catch((err) => next(err))
+  }
+  else {
+    next(boom.badRequest())
+  }
 })
 
 module.exports = router
