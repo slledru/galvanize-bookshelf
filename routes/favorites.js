@@ -130,21 +130,41 @@ router.post('/', (req, res, next) => {
 router.delete('/', (req, res, next) => {
   const { bookId } = req.body
   if (bookId) {
-    knex(favoriteTable)
-      .del()
-      .where('book_id', bookId)
-      .returning(['book_id', 'user_id'])
-      .then((rows) => {
-        if (rows.length === 1) {
-          return rows[0]
-        }
-        else {
-          next(boom.badImplementation())
-        }
-      })
-      .then((row) => humps.camelizeKeys(row))
-      .then((camel) => res.json(camel))
-      .catch((err) => next(err))
+    const { token } = req.cookies
+    if (token) {
+      const decoded = jwt.decode(token)
+      knex(userTable)
+        .select(['id'])
+        .where('email', decoded.data)
+        .then((rows) => {
+          if (rows.length === 1) {
+            knex(favoriteTable)
+              .del()
+              .where('book_id', bookId)
+              .returning(['book_id', 'user_id'])
+              .then((deleted) => {
+                if (deleted.length === 1) {
+                  return deleted[0]
+                }
+                else {
+                  next(boom.badImplementation())
+                }
+              })
+              .then((row) => humps.camelizeKeys(row))
+              .then((camel) => res.json(camel))
+              .catch((err) => next(err))
+          }
+          else {
+            next(boom.badRequest('Email must be unique'))
+          }
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+    }
+    else {
+      next(boom.unauthorized())
+    }
   }
   else {
     next(boom.badRequest())
