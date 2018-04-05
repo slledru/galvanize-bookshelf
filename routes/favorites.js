@@ -158,26 +158,34 @@ router.delete('/', (req, res, next) => {
           if (rows.length === 1) {
             knex(favoriteTable)
               .del()
-              .where('book_id', bookId)
               .returning(['book_id', 'user_id'])
+              .where({ book_id: bookId, user_id: rows[0].id})
               .then((deleted) => {
                 if (deleted.length === 1) {
-                  return deleted[0]
+                  res.json(humps.camelizeKeys(deleted[0]))
                 }
                 else {
-                  next(boom.badImplementation())
+                  next(boom.notFound('Favorite not found'))
                 }
               })
-              .then((row) => humps.camelizeKeys(row))
-              .then((camel) => res.json(camel))
-              .catch((err) => next(err))
+              .catch((err) => {
+                if (err.code === '22P02') {
+                  next(boom.badRequest('Book ID must be an integer'))
+                }
+                else if (err.code === '23503') {
+                  next(boom.notFound('Book not found'))
+                }
+                else {
+                  console.log('delete err', err)
+                }
+              })
           }
           else {
             next(boom.badRequest('Email must be unique'))
           }
         })
         .catch((err) => {
-          console.log(err)
+          console.log('delete err2', err)
         })
     }
     else {
