@@ -67,16 +67,24 @@ router.get('/check', (req, res, next) => {
           knex(favoriteTable)
             .where('book_id', bookId)
             .then((favs) => {
-              res.json(favs.length > 0)
+              if (favs.length > 0) {
+                res.json(true)
+              }
+              else {
+                next(boom.notFound())
+              }
             })
-            .catch((err) => res.json(false))
+            .catch((err) => {
+              //console.log('err1', err)
+              next(boom.badRequest('Book ID must be an integer'))
+            })
         }
         else {
           next(boom.badRequest('Email must be unique'))
         }
       })
       .catch((err) => {
-        console.log(err)
+        console.log('err2', err)
       })
   }
   else {
