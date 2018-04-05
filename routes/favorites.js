@@ -47,7 +47,26 @@ router.get('/check', (req, res, next) => {
 })
 
 router.post('/', (req, res, next) => {
-
+  const { bookId } = req.body
+  if (bookId) {
+    knex(favoriteTable)
+      .insert([{ book_id: bookId, user_id: 1 }])
+      .returning(['id', 'book_id', 'user_id'])
+      .then((rows) => {
+        if (rows.length === 1) {
+          return rows[0]
+        }
+        else {
+          next(boom.badImplementation())
+        }
+      })
+      .then((row) => humps.camelizeKeys(row))
+      .then((camel) => res.json(camel))
+      .catch((err) => next(err))
+  }
+  else {
+    next(boom.badRequest())
+  }
 })
 
 router.delete('/', (req, res, next) => {
