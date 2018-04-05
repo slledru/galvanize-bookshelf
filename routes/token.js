@@ -91,7 +91,7 @@ router.post('/', (req, res, next) => {
 
 router.delete('/', (req, res, next) => {
   res.setHeader('Set-Cookie', `token=; Path=\/; HttpOnly`)
-  res.sendStatus(200)
+  res.status(200).json(true)
 })
 
 module.exports = router
