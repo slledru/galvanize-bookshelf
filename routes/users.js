@@ -27,42 +27,49 @@ router.post('/', (req, res, next) => {
     next(boom.badRequest('Email must not be blank'))
   }
   else {
-    bcrypt.hash(password, saltRounds, (err, hash) => {
-      if (err) {
+    bcrypt.genSalt(saltRounds, (err1, salt) => {
+      if (err1) {
         next(boom.badImplementation())
       }
       else {
-        const first_name = humps.camelizeKeys(firstName)
-        const last_name = humps.camelizeKeys(lastName)
-        const hashed_password = hash
-        knex(userTable)
-          .insert({
-            first_name, last_name, email, hashed_password
-          })
-          .returning(['first_name', 'last_name', 'email', 'id'])
-          .then((rows) => {
-            if (rows.length > 0) {
-              return rows[0]
-            }
-            else {
-              next(boom.notFound())
-            }
-          })
-          .then((row) => {
-            const token = jwt.sign({ data: email }, password)
-            res.setHeader('Set-Cookie', `token=${token}; Path=\/; HttpOnly`)
-            res.json(humps.camelizeKeys(row))
-          })
-          .catch((ex) => {
-            /* eslint-disable */
-            if (ex.code == 23505) {
-              next(boom.badRequest('Email already exists'))
-            }
-            else {
-              next(boom.badImplementation())
-            }
-            /* eslint-enable */
-          })
+        bcrypt.hash(password, salt, (err2, hash) => {
+          if (err2) {
+            next(boom.badImplementation())
+          }
+          else {
+            const first_name = humps.decamelizeKeys(firstName)
+            const last_name = humps.decamelizeKeys(lastName)
+            const hashed_password = hash
+            knex(userTable)
+              .insert({
+                first_name, last_name, email, hashed_password
+              })
+              .returning(['first_name', 'last_name', 'email', 'id'])
+              .then((rows) => {
+                if (rows.length > 0) {
+                  return rows[0]
+                }
+                else {
+                  next(boom.notFound())
+                }
+              })
+              .then((row) => {
+                const token = jwt.sign({ data: email }, password)
+                res.setHeader('Set-Cookie', `token=${token}; Path=\/; HttpOnly`)
+                res.json(humps.camelizeKeys(row))
+              })
+              .catch((ex) => {
+                /* eslint-disable */
+                if (ex.code == 23505) {
+                  next(boom.badRequest('Email already exists'))
+                }
+                else {
+                  next(boom.badImplementation())
+                }
+                /* eslint-enable */
+              })
+          }
+        })
       }
     })
   }
