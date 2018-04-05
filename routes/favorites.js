@@ -116,7 +116,17 @@ router.post('/', (req, res, next) => {
               })
               .then((row) => humps.camelizeKeys(row))
               .then((camel) => res.json(camel))
-              .catch((err) => next(err))
+              .catch((err) => {
+                if (err.code === '22P02') {
+                  next(boom.badRequest('Book ID must be an integer'))
+                }
+                else if (err.code === '23503') {
+                  next(boom.notFound('Book not found'))
+                }
+                else {
+                  console.log('post err', err)
+                }
+              })
           }
           else {
             next(boom.badRequest('Email must be unique'))
