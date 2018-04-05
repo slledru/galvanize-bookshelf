@@ -12,34 +12,23 @@ const userTable = 'users'
 const router = express.Router()
 
 router.get('/', (req, res, next) => {
-  const cookieKeys = Object.keys(req.cookies)
-  if (cookieKeys.length > 0) {
-    const token = cookieKeys.reduce((acc, key) => {
-      if (key === 'token') {
-        return req.cookies[key]
-      }
-      return acc
-    }, null)
-    if (token !== null) {
-      const decoded = jwt.decode(token)
-      knex(userTable)
-        .select(['email', 'first_name', 'id', 'last_name'])
-        .where('email', decoded.data)
-        .then((rows) => {
-          if (rows.length === 1) {
-            res.status(200).json(true)
-          }
-          else {
-            next(boom.badRequest('Email must be unique'))
-          }
-        })
-        .catch((err) => {
-          console.log(err)
-        })
-    }
-    else {
-      res.status(200).json(false)
-    }
+  const { token } = req.cookies
+  if (token) {
+    const decoded = jwt.decode(token)
+    knex(userTable)
+      .select(['email', 'first_name', 'id', 'last_name'])
+      .where('email', decoded.data)
+      .then((rows) => {
+        if (rows.length === 1) {
+          res.status(200).json(true)
+        }
+        else {
+          next(boom.badRequest('Email must be unique'))
+        }
+      })
+      .catch((err) => {
+        console.log(err)
+      })
   }
   else {
     res.status(200).json(false)
