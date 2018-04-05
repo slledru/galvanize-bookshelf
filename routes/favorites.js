@@ -67,12 +67,7 @@ router.get('/check', (req, res, next) => {
           knex(favoriteTable)
             .where('book_id', bookId)
             .then((favs) => {
-              if (favs.length > 0) {
-                res.json(true)
-              }
-              else {
-                next(boom.notFound())
-              }
+              res.json(favs.length > 0)
             })
             .catch((err) => {
               //console.log('err1', err)
