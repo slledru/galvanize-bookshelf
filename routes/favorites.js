@@ -4,7 +4,6 @@ const express = require('express')
 const knex = require('../knex')
 const humps = require('humps')
 const boom = require('boom')
-const jwt = require('jsonwebtoken')
 const isAuthorized = require('./auth')
 
 const favoriteTable = 'favorites'

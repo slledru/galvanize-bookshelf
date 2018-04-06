@@ -73,7 +73,6 @@ router.post('/', (req, res, next) => {
                   id: record.id
                 }
                 res.setHeader('Set-Cookie', `token=${token}; Path=\/; HttpOnly`)
-                
                 res.status(200).json(humps.camelizeKeys(toSend))
               }
               else {
