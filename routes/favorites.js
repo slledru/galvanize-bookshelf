@@ -5,6 +5,8 @@ const knex = require('../knex')
 const humps = require('humps')
 const boom = require('boom')
 const jwt = require('jsonwebtoken')
+const isAuthorized = require('./auth')
+
 const favoriteTable = 'favorites'
 const bookTable = 'books'
 const userTable = 'users'
@@ -25,115 +27,56 @@ const columns = [
 // eslint-disable-next-line new-cap
 const router = express.Router()
 
+router.use(isAuthorized)
+
 router.get('/', (req, res, next) => {
-  const { token } = req.cookies
-  if (token) {
-    const decoded = jwt.decode(token)
-    knex(userTable)
-      .select(['id'])
-      .where('email', decoded.data)
-      .then((rows) => {
-        if (rows.length === 1) {
-          knex(favoriteTable)
-            .select(columns)
-            .innerJoin(bookTable, 'books.id', 'favorites.book_id')
-            .innerJoin(userTable, 'users.id', 'favorites.user_id')
-            .where('users.id', rows[0].id)
-            .then((favs) => res.json(favs))
-        }
-        else {
-          next(boom.badRequest('Email must be unique'))
-        }
-      })
-      .catch((err) => {
-        console.log(err)
-      })
-  }
-  else {
-    next(boom.unauthorized())
-  }
+  knex(favoriteTable)
+    .select(columns)
+    .innerJoin(bookTable, 'books.id', 'favorites.book_id')
+    .innerJoin(userTable, 'users.id', 'favorites.user_id')
+    .where('users.id', req.userId)
+    .then((favs) => res.json(favs))
 })
 
 router.get('/check', (req, res, next) => {
   const { bookId } = req.query
-  const { token } = req.cookies
-  if (token) {
-    const decoded = jwt.decode(token)
-    knex(userTable)
-      .select(['id'])
-      .where('email', decoded.data)
-      .then((rows) => {
-        if (rows.length === 1) {
-          knex(favoriteTable)
-            .where('book_id', bookId)
-            .then((favs) => {
-              res.json(favs.length > 0)
-            })
-            .catch((err) => {
-              //console.log('err1', err)
-              next(boom.badRequest('Book ID must be an integer'))
-            })
-        }
-        else {
-          next(boom.badRequest('Email must be unique'))
-        }
-      })
-      .catch((err) => {
-        console.log('err2', err)
-      })
-  }
-  else {
-    next(boom.unauthorized())
-  }
+  knex(favoriteTable)
+    .where('book_id', bookId)
+    .then((favs) => {
+      res.json(favs.length > 0)
+    })
+    .catch((err) => {
+      next(boom.badRequest('Book ID must be an integer'))
+    })
 })
 
 router.post('/', (req, res, next) => {
   const { bookId } = req.body
   if (bookId) {
-    const { token } = req.cookies
-    if (token) {
-      const decoded = jwt.decode(token)
-      knex(userTable)
-        .select(['id'])
-        .where('email', decoded.data)
-        .then((rows) => {
-          if (rows.length === 1) {
-            knex(favoriteTable)
-              .insert([{ book_id: bookId, user_id: rows[0].id }])
-              .returning(['id', 'book_id', 'user_id'])
-              .then((inserted) => {
-                if (inserted.length === 1) {
-                  return inserted[0]
-                }
-                else {
-                  next(boom.badImplementation())
-                }
-              })
-              .then((row) => humps.camelizeKeys(row))
-              .then((camel) => res.json(camel))
-              .catch((err) => {
-                if (err.code === '22P02') {
-                  next(boom.badRequest('Book ID must be an integer'))
-                }
-                else if (err.code === '23503') {
-                  next(boom.notFound('Book not found'))
-                }
-                else {
-                  console.log('post err', err)
-                }
-              })
-          }
-          else {
-            next(boom.badRequest('Email must be unique'))
-          }
-        })
-        .catch((err) => {
-          console.log(err)
-        })
-    }
-    else {
-      next(boom.unauthorized())
-    }
+    knex(favoriteTable)
+      .insert([{ book_id: bookId, user_id: req.userId }])
+      .returning(['id', 'book_id', 'user_id'])
+      .then((inserted) => {
+        if (inserted.length === 1) {
+          return inserted[0]
+        }
+        else {
+          next(boom.badImplementation())
+        }
+      })
+      .then((row) => humps.camelizeKeys(row))
+      .then((camel) => res.json(camel))
+      .catch((err) => {
+        if (err.code === '22P02') {
+          next(boom.badRequest('Book ID must be an integer'))
+        }
+        else if (err.code === '23503') {
+          next(boom.notFound('Book not found'))
+        }
+        else {
+          console.log('post err', err)
+        }
+      })
   }
   else {
     next(boom.badRequest())
@@ -143,49 +86,29 @@ router.post('/', (req, res, next) => {
 router.delete('/', (req, res, next) => {
   const { bookId } = req.body
   if (bookId) {
-    const { token } = req.cookies
-    if (token) {
-      const decoded = jwt.decode(token)
-      knex(userTable)
-        .select(['id'])
-        .where('email', decoded.data)
-        .then((rows) => {
-          if (rows.length === 1) {
-            knex(favoriteTable)
-              .del()
-              .returning(['book_id', 'user_id'])
-              .where({ book_id: bookId, user_id: rows[0].id})
-              .then((deleted) => {
-                if (deleted.length === 1) {
-                  res.json(humps.camelizeKeys(deleted[0]))
-                }
-                else {
-                  next(boom.notFound('Favorite not found'))
-                }
-              })
-              .catch((err) => {
-                if (err.code === '22P02') {
-                  next(boom.badRequest('Book ID must be an integer'))
-                }
-                else if (err.code === '23503') {
-                  next(boom.notFound('Book not found'))
-                }
-                else {
-                  console.log('delete err', err)
-                }
-              })
-          }
-          else {
-            next(boom.badRequest('Email must be unique'))
-          }
-        })
-        .catch((err) => {
-          console.log('delete err2', err)
-        })
-    }
-    else {
-      next(boom.unauthorized())
-    }
+    knex(favoriteTable)
+      .del()
+      .returning(['book_id', 'user_id'])
+      .where({ book_id: bookId, user_id: req.userId})
+      .then((deleted) => {
+        if (deleted.length === 1) {
+          res.json(humps.camelizeKeys(deleted[0]))
+        }
+        else {
+          next(boom.notFound('Favorite not found'))
+        }
+      })
+      .catch((err) => {
+        if (err.code === '22P02') {
+          next(boom.badRequest('Book ID must be an integer'))
+        }
+        else if (err.code === '23503') {
+          next(boom.notFound('Book not found'))
+        }
+        else {
+          console.log('delete err', err)
+        }
+      })
   }
   else {
     next(boom.badRequest())
