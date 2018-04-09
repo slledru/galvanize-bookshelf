@@ -54,7 +54,7 @@ router.post('/', (req, res, next) => {
                 }
               })
               .then((row) => {
-                const token = jwt.sign({ data: email }, password)
+                const token = jwt.sign({ data: email }, process.env.JWT_KEY)
                 res.setHeader('Set-Cookie', `token=${token}; Path=\/; HttpOnly`)
                 res.json(humps.camelizeKeys(row))
               })

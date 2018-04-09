@@ -66,7 +66,7 @@ router.post('/', (req, res, next) => {
             }
             else {
               if (result) {
-                const token = jwt.sign({ data: email }, password)
+                const token = jwt.sign({ data: email }, process.env.JWT_KEY)
                 const toSend = { email: record.email,
                   first_name: record.first_name,
                   last_name: record.last_name,
